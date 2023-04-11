@@ -1,52 +1,64 @@
-import User from "./components/users/User";
-import React,{useState,useEffect} from "react";
-import AddUser from "./components/users/AddUser";
+import React, { useEffect, useState } from "react";
+import Post from "./components/Post";
+import AddPost from "./components/AddPost";
+import { BrowserRouter as Router,Routes,Route } from "react-router-dom";
+import PostDetail from "./components/PostDetail";
+import EditPost from "./components/EditPost";
 
 function App() {
-  let [users,setUsers] = useState([]);
-  let [showForm,setShowForm] = useState(false);
-  useEffect(()=> {
-    fetch("https://randomuser.me/api/?results=10")
-    .then(res => res.json())
-    .then(users => {
-      let rawUser = users.results;
-      let filterUser = rawUser.map(usr => {
-        return {
-          uuid : usr.login.uuid,
-          name : `${usr.name.title} ${usr.name.first} ${usr.name.last}`,
-          phone : usr.phone,
-          cell : usr.cell,
-          image : usr.picture.thumbnail
-        }
-      });
-      setUsers(filterUser);
-    })
-    .catch(err => console.log(err));
+  const End_POINT = "http://localhost:9000";
+  let [posts,setPosts] = useState([])
+  
+  const addNewPost = async (post)=>{
+    console.log("Post is",post);
+    await fetch(`${End_POINT}/posts`,{
+      method : "POST",
+      body : JSON.stringify({
+        title : post.title,
+        description : post.description
+      }),
+      headers : {
+        "content-type" : "application/json"
+      }
+    });
+    setPosts([post,...posts])
+    }
+
+  useEffect(()=>{
+    fetch(`${End_POINT}/posts`)
+    .then(res =>res.json())
+    .then(data => setPosts(data))
   },[])
 
-  const removeUserHandler = (uuid)=>{
-      let remainUser = users.filter(ele => ele.uuid !== uuid);
-      setUsers(remainUser);
+  const deletePostHandler =async (id)=>{
+    await fetch(`${End_POINT}/posts/`+id,{
+      method : "DELETE"
+    });
+    setPosts(posts.filter(ele => ele.id !== id));
   }
 
-  const showUserSubmitForm = ()=>{
-    setShowForm(!showForm);
-  }
-
-  const addUserHandler = (user)=>{
-    let newUserList = [user,...users];
-    setUsers(newUserList);
-    setShowForm(!showForm);
+  const updatePostHandler = async(updatePost)=>{
+    await fetch(`${End_POINT}/posts/`+updatePost.id,{
+      method : "PATCH",
+      body : JSON.stringify(updatePost),
+      headers : {
+        "content-type" : "application/json"
+      }
+    })
+    setPosts(posts.map(ele => ele.id === updatePost.id ? updatePost : ele));
   }
 
   return (
     <div className="container my-3">
-      <h1 className="text-center my-5 text-info">Our Employee</h1>
-      <button className="btn btn-success my-3" onClick={showUserSubmitForm}>Add Employee</button>
-      {showForm && <AddUser addUser={addUserHandler} />}
-      {
-        users.map( usr => <User data={usr} key={usr.uuid} remove={removeUserHandler} />)
-      }
+      <h1 className="text-center text-info my-3">Posts</h1>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Post posts={posts} removePost={deletePostHandler} /> } />
+          <Route path="/add" element={<AddPost addPost={addNewPost} />} />
+          <Route path="/post/:id" element={<PostDetail/>} />
+          <Route path="/post/edit/:id" element={<EditPost updatePost = {updatePostHandler}/>} />
+        </Routes>
+      </Router>
     </div>
   );
 }

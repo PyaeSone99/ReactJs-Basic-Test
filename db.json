@@ -1,0 +1,18 @@
+{
+  "posts": [
+    {
+      "title": "Ronaldo",
+      "description": "Ronaldo is king of soccer",
+      "id": 1
+    },
+    {
+      "title": "MESSI",
+      "description": "Messi is also soccer king",
+      "id": 2
+    }
+  ],
+  "comments": [],
+  "profile": {
+    "name": "typicode"
+  }
+}
